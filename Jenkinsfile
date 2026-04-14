@@ -149,7 +149,7 @@ Branche : ${env.GIT_BRANCH}
 URL     : ${env.BUILD_URL}
 Logs    : ${env.BUILD_URL}console
                 """,
-                to: 'tonemail@gmail.com',
+                to: 'stephanedoungue@gmail.com',  // ← corrigé
                 attachLog: true
             )
         }
@@ -170,7 +170,7 @@ Branche : ${env.GIT_BRANCH}
 
 URL : ${env.BUILD_URL}
                 """,
-                to: 'tonemail@gmail.com'
+                to: 'stephanedoungue@gmail.com'   // ← corrigé
             )
         }
 
@@ -185,7 +185,7 @@ Build   : #${env.BUILD_NUMBER}
 
 URL : ${env.BUILD_URL}
                 """,
-                to: 'tonemail@gmail.com'
+                to: 'stephanedoungue@gmail.com'   // ← corrigé
             )
         }
     }
