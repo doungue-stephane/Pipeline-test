@@ -178,7 +178,7 @@ URL : ${env.BUILD_URL}
             emailext(
                 subject: "✅ FIXED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-Le build est redevenu stable ✅
+Le build est redevenu stable
 
 Projet  : ${env.JOB_NAME}
 Build   : #${env.BUILD_NUMBER}
