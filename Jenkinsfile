@@ -8,11 +8,7 @@ pipeline {
     }
 
     parameters {
-        string(
-            name:         'BRANCH',
-            defaultValue: 'main',
-            description:  'Branche Git à builder'
-        )
+        // ❌ Supprimer le paramètre BRANCH — géré automatiquement
         choice(
             name:    'ENVIRONMENT',
             choices: ['dev', 'staging', 'prod'],
@@ -30,7 +26,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Branch  : ${env.GIT_BRANCH}"
+                echo "Branch  : ${env.BRANCH_NAME}"   // ✅ variable automatique
                 echo "Commit  : ${env.GIT_COMMIT}"
             }
         }
@@ -49,12 +45,8 @@ pipeline {
                 sh 'mvn test -B'
             }
             post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-                failure {
-                    echo 'Tests unitaires en ECHEC — vérifier les logs'
-                }
+                always { junit '**/target/surefire-reports/*.xml' }
+                failure { echo 'Tests unitaires en ECHEC — vérifier les logs' }
             }
         }
 
@@ -66,9 +58,7 @@ pipeline {
                 sh 'mvn verify -Dsurefire.skip=true -B'
             }
             post {
-                always {
-                    junit '**/target/failsafe-reports/*.xml'
-                }
+                always { junit '**/target/failsafe-reports/*.xml' }
             }
         }
 
@@ -79,9 +69,9 @@ pipeline {
             post {
                 always {
                     jacoco(
-                        execPattern:   '**/target/jacoco.exec',
-                        classPattern:  '**/target/classes',
-                        sourcePattern: '**/src/main/java',
+                        execPattern:         '**/target/jacoco.exec',
+                        classPattern:        '**/target/classes',
+                        sourcePattern:       '**/src/main/java',
                         minimumLineCoverage: '70'
                     )
                 }
@@ -110,82 +100,86 @@ pipeline {
                         ],
                         qualityGates: [[
                             threshold: 10,
-                            type: 'TOTAL',
-                            unstable: true
+                            type:      'TOTAL',
+                            unstable:  true
                         ]]
                     )
                 }
             }
         }
 
+        // ✅ Deploy uniquement sur main ou staging — pas sur les branches de dev
         stage('Archive') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'staging'
+                }
+            }
             steps {
                 archiveArtifacts(
-                    artifacts:   '**/target/*.jar',
-                    fingerprint: true,
+                    artifacts:         '**/target/*.jar',
+                    fingerprint:       true,
                     allowEmptyArchive: false
                 )
-                echo "Artefact archivé avec succès"
+                echo "Artefact archivé — branche : ${env.BRANCH_NAME}"
             }
         }
     }
 
     post {
-
         always {
-            echo "Pipeline terminée — statut : ${currentBuild.currentResult}"
+            echo "Pipeline terminée — branche : ${env.BRANCH_NAME} — statut : ${currentBuild.currentResult}"
         }
 
         failure {
             emailext(
-                subject: "❌ FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "❌ FAILED [${env.BRANCH_NAME}]: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
 Le build a échoué.
 
 Projet  : ${env.JOB_NAME}
+Branche : ${env.BRANCH_NAME}
 Build   : #${env.BUILD_NUMBER}
-Branche : ${env.GIT_BRANCH}
+Commit  : ${env.GIT_COMMIT}
 
 URL     : ${env.BUILD_URL}
 Logs    : ${env.BUILD_URL}console
                 """,
-                to: 'stephanedoungue@gmail.com',  // ← corrigé
+                to: 'stephanedoungue@gmail.com',
                 attachLog: true
             )
         }
 
         unstable {
             emailext(
-                subject: "⚠️ UNSTABLE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "⚠️ UNSTABLE [${env.BRANCH_NAME}]: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-Le build est instable ⚠️
-
-Causes possibles :
-- Tests en échec
-- Problèmes de qualité (Checkstyle, PMD, SpotBugs)
+Le build est instable.
 
 Projet  : ${env.JOB_NAME}
+Branche : ${env.BRANCH_NAME}
 Build   : #${env.BUILD_NUMBER}
-Branche : ${env.GIT_BRANCH}
 
 URL : ${env.BUILD_URL}
                 """,
-                to: 'stephanedoungue@gmail.com'   // ← corrigé
+                to: 'stephanedoungue@gmail.com'
             )
         }
 
         fixed {
             emailext(
-                subject: "✅ FIXED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "✅ FIXED [${env.BRANCH_NAME}]: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-Le build est redevenu stable ✅
+Le build est redevenu stable.
 
 Projet  : ${env.JOB_NAME}
+Branche : ${env.BRANCH_NAME}
 Build   : #${env.BUILD_NUMBER}
 
 URL : ${env.BUILD_URL}
                 """,
-                to: 'stephanedoungue@gmail.com'   // ← corrigé
+                to: 'stephanedoungue@gmail.com'
             )
         }
     }
