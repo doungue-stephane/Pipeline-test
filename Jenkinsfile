@@ -187,7 +187,7 @@ URL : ${env.BUILD_URL}
 
         fixed {
             emailext(
-                subject: "✅ FIXED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: " FIXED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
 Le build est redevenu stable
 
