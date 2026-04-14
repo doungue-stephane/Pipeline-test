@@ -136,6 +136,17 @@ pipeline {
             echo "Pipeline terminée — statut : ${currentBuild.currentResult}"
         }
 
+        success {
+            echo "Build OK — déclenchement du job pipeline-test"
+
+            build job: 'pipeline-test',
+                  parameters: [
+                      string(name: 'BRANCH', value: params.BRANCH),
+                      string(name: 'BUILD_NUMBER_UPSTREAM', value: env.BUILD_NUMBER)
+                  ],
+                  wait: false
+        }
+
         failure {
             emailext(
                 subject: "❌ FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
@@ -149,7 +160,7 @@ Branche : ${env.GIT_BRANCH}
 URL     : ${env.BUILD_URL}
 Logs    : ${env.BUILD_URL}console
                 """,
-                to: 'stephanedoungue@gmail.com',  // ← corrigé
+                to: 'stephanedoungue@gmail.com',
                 attachLog: true
             )
         }
@@ -170,7 +181,7 @@ Branche : ${env.GIT_BRANCH}
 
 URL : ${env.BUILD_URL}
                 """,
-                to: 'stephanedoungue@gmail.com'   // ← corrigé
+                to: 'stephanedoungue@gmail.com'
             )
         }
 
@@ -185,7 +196,7 @@ Build   : #${env.BUILD_NUMBER}
 
 URL : ${env.BUILD_URL}
                 """,
-                to: 'stephanedoungue@gmail.com'   // ← corrigé
+                to: 'stephanedoungue@gmail.com'
             )
         }
     }
