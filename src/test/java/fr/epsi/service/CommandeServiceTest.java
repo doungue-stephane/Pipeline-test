@@ -85,7 +85,7 @@ class CommandeServiceTest {
     @DisplayName("Remise 10% sur 100€ = 90€")
     void appliquerRemise_DixPourcent_RetourneQuatreVingtDix() {
         double resultat = service.appliquerRemise(100.0, 10);
-        assertEquals(999.0, resultat, 0.001);
+        assertEquals(90.0, resultat, 0.001);
     }
 
     @Test
